@@ -10,7 +10,7 @@ app.use(cors())
 //connect database
 mongoose.set('strictQuery', false);
 mongoose.connect("mongodb://localhost:27017/product")
-    .then(() => { console.log("connection successfull") })
+    .then(() => { console.log("database connection successfull") })
     .catch((err) => { console.log(err) })
 
 
@@ -45,14 +45,12 @@ const storage= multer.diskStorage({
 var upload = multer({
     storage: storage,
     limits: {
-
     },
     fileFilter: (req, file, cb) => {
         if (
             file.mimetype === "image/jpg" ||
             file.mimetype === "image/png" ||
             file.mimetype === "image/jpeg"
-
         ) {
             cb(null, true);
         } else {
@@ -61,12 +59,12 @@ var upload = multer({
     }
 })
 
-
 //This Endpoint is for file saving
 app.post('/file', upload.array("avatar",5), (req, res) => {
     res.send(req.files);
 })
 
+//multer error handling middleware
 app.use((err, req, res, next) => {
     if (err) {
         if (err instanceof multer.MulterError) {
@@ -74,30 +72,24 @@ app.use((err, req, res, next) => {
         } else {
             res.status(500).send(err.message);
         }
-
     } else {
         res.send("success");
     }
 })
 
+//All Other Route Imports
 const UserAuthenticateRouter = require('./routes/UserAuthenticate')
 const ProductRouter = require('./routes/Product')
 const CategoryRouter = require('./routes/Category')
 const VariantRouter = require('./routes/Variant')
 
 
-
-
-
-
 //All Other Routes
-
 app.use('/users', UserAuthenticateRouter)
-app.use('/product', ProductRouter)
-app.use('/category', CategoryRouter)
-app.use('/variant', VariantRouter)
+app.use('/product',authenticateToken, ProductRouter)
+app.use('/category',authenticateToken, CategoryRouter)
+app.use('/variant',authenticateToken, VariantRouter)
 
-
-
-app.listen(3000)
+//listening to port
+app.listen(3000);
 
